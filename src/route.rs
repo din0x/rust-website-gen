@@ -2,7 +2,7 @@ use std::{
     borrow::Cow,
     fs::{self, OpenOptions},
     io::{self, Write},
-    path::Path,
+    path::{Path, PathBuf},
 };
 
 /// Build a route in the fs.
@@ -47,4 +47,29 @@ fn to_final_path(path: &Path) -> Cow<'_, Path> {
     } else {
         path.join("index.html").into()
     }
+}
+
+pub struct ServeDir(PathBuf);
+
+impl Route for ServeDir {
+    fn build(&self, path: &Path) -> io::Result<()> {
+        walk_dir(&self.0, &mut |entry_path| {
+            let dest = path.join(entry_path.strip_prefix(&self.0).unwrap());
+            fs::create_dir_all(dest.parent().unwrap()).expect("failed to create dir");
+            fs::copy(entry_path, dest).expect("failed to copy files");
+        })
+    }
+}
+
+fn walk_dir(dir: &Path, cb: &mut dyn FnMut(&Path)) -> io::Result<()> {
+    for entry in fs::read_dir(dir)? {
+        let path = entry?.path();
+        if path.is_dir() {
+            walk_dir(&path, cb)?;
+        } else {
+            cb(&path)
+        }
+    }
+
+    Ok(())
 }
