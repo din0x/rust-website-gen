@@ -49,7 +49,7 @@ fn to_final_path(path: &Path) -> Cow<'_, Path> {
     }
 }
 
-pub struct ServeDir(PathBuf);
+pub struct ServeDir(pub PathBuf);
 
 impl Route for ServeDir {
     fn build(&self, path: &Path) -> io::Result<()> {
