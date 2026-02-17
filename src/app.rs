@@ -43,14 +43,8 @@ impl App {
             panic!("the output path MUST be relative")
         }
 
-        for entry in fs::read_dir(prefix)? {
-            let entry = entry?;
-            if entry.metadata()?.is_dir() {
-                fs::remove_dir_all(entry.path())?;
-            } else {
-                fs::remove_file(entry.path())?;
-            }
-        }
+        // Ignore `No such file or directory`
+        _ = fs::remove_dir_all(prefix);
 
         Route::build(self, prefix)
     }
